@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 export type OrderLine = {
@@ -16,13 +17,19 @@ export type Order = {
   createdAt: number;
 };
 
-const DATA_DIR = join(process.cwd(), ".data");
-const DATA_FILE = join(DATA_DIR, "orders.json");
+/** Vercel serverless : seul le répertoire temporaire est inscriptible (pas `process.cwd()`). */
+function getOrdersFilePath(): string {
+  if (process.env.VERCEL) {
+    return join(tmpdir(), "restaurant-mvp-orders.json");
+  }
+  return join(process.cwd(), ".data", "orders.json");
+}
 
 function loadOrders(): Order[] {
+  const file = getOrdersFilePath();
   try {
-    if (!existsSync(DATA_FILE)) return [];
-    const raw = readFileSync(DATA_FILE, "utf8");
+    if (!existsSync(file)) return [];
+    const raw = readFileSync(file, "utf8");
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
     return parsed as Order[];
@@ -32,10 +39,13 @@ function loadOrders(): Order[] {
 }
 
 function saveOrders(orders: Order[]) {
-  mkdirSync(DATA_DIR, { recursive: true });
-  const tmp = `${DATA_FILE}.tmp`;
+  const file = getOrdersFilePath();
+  if (!process.env.VERCEL) {
+    mkdirSync(join(process.cwd(), ".data"), { recursive: true });
+  }
+  const tmp = `${file}.tmp`;
   writeFileSync(tmp, JSON.stringify(orders), "utf8");
-  renameSync(tmp, DATA_FILE);
+  renameSync(tmp, file);
 }
 
 export function addOrder(input: {
