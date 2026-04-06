@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
   BellRing,
@@ -10,7 +11,12 @@ import {
   ShoppingBag,
   X,
 } from "lucide-react";
-import { MENU_ITEMS, RESTAURANT_NAME, type MenuItem } from "@/lib/menu";
+import {
+  RESTAURANT_BADGE,
+  RESTAURANT_NAME,
+  RESTAURANT_TAGLINE,
+  type MenuItem,
+} from "@/lib/menu";
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("fr-FR", {
@@ -21,8 +27,10 @@ function formatPrice(value: number) {
 
 export default function MenuView({
   tableLabel,
+  menuItems,
 }: {
   tableLabel: string | null;
+  menuItems: MenuItem[];
 }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -46,11 +54,13 @@ export default function MenuView({
   };
 
   const lines = useMemo(() => {
-    return MENU_ITEMS.map((item) => ({
-      item,
-      qty: quantities[item.id] ?? 0,
-    })).filter((l) => l.qty > 0);
-  }, [quantities]);
+    return menuItems
+      .map((item) => ({
+        item,
+        qty: quantities[item.id] ?? 0,
+      }))
+      .filter((l) => l.qty > 0);
+  }, [quantities, menuItems]);
 
   const total = useMemo(() => {
     return lines.reduce((sum, { item, qty }) => sum + item.price * qty, 0);
@@ -114,8 +124,11 @@ export default function MenuView({
         <h1 className="text-center font-serif text-2xl font-semibold tracking-tight text-stone-800">
           {RESTAURANT_NAME}
         </h1>
-        <p className="mt-1 text-center text-sm text-stone-500">
-          Menu du jour — commande en ligne
+        <p className="mt-1 text-center text-sm text-stone-600">
+          {RESTAURANT_TAGLINE}
+        </p>
+        <p className="mt-0.5 text-center text-xs text-stone-500">
+          {RESTAURANT_BADGE} · Commande en ligne (démo)
         </p>
         <div className="mt-3 flex justify-center">
           <button
@@ -131,7 +144,7 @@ export default function MenuView({
 
       <main className="mx-auto max-w-lg px-4 pt-5">
         <ul className="flex flex-col gap-3">
-          {MENU_ITEMS.map((dish) => (
+          {menuItems.map((dish) => (
             <MenuDishRow
               key={dish.id}
               dish={dish}
@@ -312,6 +325,18 @@ export default function MenuView({
 function MenuDishRow({ dish, onAdd }: { dish: MenuItem; onAdd: () => void }) {
   return (
     <li className="flex gap-3 rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm">
+      {dish.imageUrl ? (
+        <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-stone-100">
+          <Image
+            src={dish.imageUrl}
+            alt={dish.name}
+            fill
+            className="object-cover"
+            sizes="80px"
+            unoptimized
+          />
+        </div>
+      ) : null}
       <div className="min-w-0 flex-1">
         <h2 className="font-semibold text-stone-900">{dish.name}</h2>
         <p className="mt-1 text-sm leading-relaxed text-stone-600">

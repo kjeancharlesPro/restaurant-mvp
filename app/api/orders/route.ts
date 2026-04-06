@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addOrder, type OrderLine } from "@/lib/orders-store";
+import { addOrder, type OrderLine } from "@/lib/orders";
 
 function isOrderLine(x: unknown): x is OrderLine {
   if (typeof x !== "object" || x === null) return false;
@@ -58,6 +58,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Total incohérent" }, { status: 400 });
   }
 
-  const order = addOrder({ tableLabel, lines, total });
+  const order = await addOrder({ tableLabel, lines, total });
   return NextResponse.json({ id: order.id });
 }

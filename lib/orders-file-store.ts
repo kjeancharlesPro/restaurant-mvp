@@ -1,23 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { Order, OrderLine } from "@/lib/order-types";
 
-export type OrderLine = {
-  id: string;
-  name: string;
-  price: number;
-  qty: number;
-};
-
-export type Order = {
-  id: string;
-  tableLabel: string | null;
-  lines: OrderLine[];
-  total: number;
-  createdAt: number;
-};
-
-/** Vercel serverless : seul le répertoire temporaire est inscriptible (pas `process.cwd()`). */
 function getOrdersFilePath(): string {
   if (process.env.VERCEL) {
     return join(tmpdir(), "restaurant-mvp-orders.json");
@@ -48,7 +33,14 @@ function saveOrders(orders: Order[]) {
   renameSync(tmp, file);
 }
 
-export function addOrder(input: {
+export function getOrdersFromFile(): Order[] {
+  return loadOrders().map((o) => ({
+    ...o,
+    lines: o.lines.map((l) => ({ ...l })),
+  }));
+}
+
+export function addOrderToFile(input: {
   tableLabel: string | null;
   lines: OrderLine[];
   total: number;
@@ -66,14 +58,7 @@ export function addOrder(input: {
   return order;
 }
 
-export function getOrders(): Order[] {
-  return loadOrders().map((o) => ({
-    ...o,
-    lines: o.lines.map((l) => ({ ...l })),
-  }));
-}
-
-export function removeOrder(id: string): boolean {
+export function removeOrderFromFile(id: string): boolean {
   const orders = loadOrders();
   const i = orders.findIndex((o) => o.id === id);
   if (i === -1) return false;

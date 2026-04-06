@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionCookie } from "@/lib/admin-auth";
-import { removeOrder } from "@/lib/orders-store";
+import { removeOrder } from "@/lib/orders";
 
 export async function DELETE(
   _request: Request,
@@ -18,7 +18,8 @@ export async function DELETE(
     return NextResponse.json({ error: "Identifiant manquant" }, { status: 400 });
   }
 
-  if (!removeOrder(id)) {
+  const removed = await removeOrder(id);
+  if (!removed) {
     return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
   }
 

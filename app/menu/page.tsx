@@ -1,4 +1,5 @@
 import MenuView from "@/app/menu-view";
+import { getMenuItems } from "@/lib/menu-service";
 import { tableLabelFromSearchParam } from "@/lib/table-label";
 
 export default async function MenuPage({
@@ -8,6 +9,7 @@ export default async function MenuPage({
 }) {
   const sp = await searchParams;
   const tableLabel = tableLabelFromSearchParam(sp.table);
+  const menuItems = await getMenuItems();
 
-  return <MenuView tableLabel={tableLabel} />;
+  return <MenuView tableLabel={tableLabel} menuItems={menuItems} />;
 }

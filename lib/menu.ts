@@ -3,39 +3,66 @@ export type MenuItem = {
   name: string;
   description: string;
   price: number;
+  /** URL publique (Supabase Storage ou autre). */
+  imageUrl: string | null;
 };
 
-export const RESTAURANT_NAME = "La Tavola";
+export const RESTAURANT_NAME = "Le Charentonneau";
 
-export const MENU_ITEMS: MenuItem[] = [
+export const RESTAURANT_TAGLINE = "Affaire familiale depuis 4 générations";
+
+export const RESTAURANT_BADGE = "Sur place et à emporter";
+
+/** Carte par défaut (fallback sans Supabase ou avant premier sync). */
+export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   {
-    id: "margherita",
-    name: "Pizza Margherita",
-    description: "Tomate San Marzano, mozzarella fior di latte, basilic frais, huile d’olive.",
-    price: 12.5,
+    id: "plateau-que-du-cuit",
+    name: "Plateau « que du cuit »",
+    description:
+      "½ homard frais, 3 crevettes roses, crevettes grises 100 g, bulots 200 g, 2 langoustines.",
+    price: 63,
+    imageUrl: null,
   },
   {
-    id: "carbonara",
-    name: "Pasta Carbonara",
-    description: "Spaghetti, guanciale, pecorino romano, jaune d’œuf, poivre noir.",
-    price: 14.0,
+    id: "huitres-normandes",
+    name: "Huîtres normandes n°3 (la douzaine)",
+    description: "Huîtres de Normandie servies sur glace.",
+    price: 32,
+    imageUrl: null,
   },
   {
-    id: "caprese",
-    name: "Insalata Caprese",
-    description: "Tomates cerises, mozzarella di bufala, pesto maison, roquette.",
-    price: 9.5,
+    id: "bulots-aioli",
+    name: "Bulots cuits maison, aïoli",
+    description: "300 g, aïoli maison.",
+    price: 16,
+    imageUrl: null,
   },
   {
-    id: "tiramisu",
-    name: "Tiramisu",
-    description: "Mascarpone, café espresso, cacao amer, biscuits à la cuillère.",
-    price: 7.0,
+    id: "soupe-poisson",
+    name: "Soupe de poisson",
+    description: "Rouille, gruyère, croûtons à l’ail.",
+    price: 14,
+    imageUrl: null,
   },
   {
-    id: "bruschetta",
-    name: "Bruschetta trio",
-    description: "Trois tartines : tomate-basilic, champignons, stracciatella.",
-    price: 8.5,
+    id: "filet-bar",
+    name: "Filet de bar, beurre blanc safrané",
+    description: "Poisson frais, sauce beurre blanc safranée.",
+    price: 24,
+    imageUrl: null,
+  },
+  {
+    id: "tartare-boeuf",
+    name: "Tartare de bœuf",
+    description: "Préparé à la commande.",
+    price: 19,
+    imageUrl: null,
+  },
+  {
+    id: "creme-brulee",
+    name: "Crème brûlée",
+    description: "Dessert fait maison.",
+    price: 10,
+    imageUrl: null,
   },
 ];

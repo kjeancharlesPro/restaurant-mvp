@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { RESTAURANT_NAME } from "@/lib/menu";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "La Tavola — Menu",
-  description: "Commande en ligne (démo) — restaurant MVP",
+  title: `${RESTAURANT_NAME} — Menu`,
+  description: `${RESTAURANT_NAME} — fruits de mer & tradition. Commande en ligne (démo).`,
 };
 
 export default function RootLayout({

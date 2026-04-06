@@ -1,8 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import type { Order } from "@/lib/orders-store";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { playNewOrderChime } from "@/lib/admin-new-order-chime";
+import type { Order } from "@/lib/orders";
+
+const POLL_MS = 8000;
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("fr-FR", {
@@ -26,8 +30,57 @@ export default function AdminOrdersPanel({
   const router = useRouter();
   const [orders, setOrders] = useState(initialOrders);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [flash, setFlash] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [liveMsg, setLiveMsg] = useState("");
+
+  const knownIdsRef = useRef(new Set(initialOrders.map((o) => o.id)));
+  const firstPollDoneRef = useRef(false);
+  const pollEnabledRef = useRef(true);
+
+  const triggerNewOrderAlert = useCallback((count: number) => {
+    setFlash(true);
+    window.setTimeout(() => setFlash(false), 950);
+    playNewOrderChime();
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate([120, 80, 120]);
+    }
+    const label =
+      count === 1 ? "Nouvelle commande reçue" : `${count} nouvelles commandes`;
+    setToast(label);
+    setLiveMsg(`${label} — ${new Date().toLocaleTimeString("fr-FR")}`);
+    window.setTimeout(() => setToast(null), 5000);
+  }, []);
+
+  const pollOrders = useCallback(async () => {
+    if (!pollEnabledRef.current) return;
+    try {
+      const res = await fetch("/api/admin/orders", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { orders?: Order[] };
+      const fresh = Array.isArray(data.orders) ? data.orders : [];
+      const prevKnown = knownIdsRef.current;
+      const newcomers = fresh.filter((o) => !prevKnown.has(o.id));
+
+      if (firstPollDoneRef.current && newcomers.length > 0) {
+        triggerNewOrderAlert(newcomers.length);
+      }
+
+      knownIdsRef.current = new Set(fresh.map((o) => o.id));
+      firstPollDoneRef.current = true;
+      setOrders(fresh);
+    } catch {
+      /* réseau / hors ligne */
+    }
+  }, [triggerNewOrderAlert]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => void pollOrders(), POLL_MS);
+    return () => window.clearInterval(id);
+  }, [pollOrders]);
 
   async function logout() {
+    pollEnabledRef.current = false;
     await fetch("/api/admin/logout", { method: "POST" });
     router.refresh();
   }
@@ -40,6 +93,7 @@ export default function AdminOrdersPanel({
         window.alert("Impossible de retirer la commande.");
         return;
       }
+      knownIdsRef.current.delete(id);
       setOrders((prev) => prev.filter((o) => o.id !== id));
     } finally {
       setRemovingId(null);
@@ -47,7 +101,27 @@ export default function AdminOrdersPanel({
   }
 
   return (
-    <div className="min-h-full bg-stone-100 px-4 py-8 text-stone-900">
+    <div className="relative min-h-full bg-stone-100 px-4 py-8 text-stone-900">
+      {flash ? (
+        <div
+          className="pointer-events-none fixed inset-0 z-[90] bg-amber-400/45 animate-new-order-flash"
+          aria-hidden
+        />
+      ) : null}
+
+      {toast && (
+        <div
+          className="fixed left-1/2 top-4 z-[95] max-w-[min(90vw,20rem)] -translate-x-1/2 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-lg"
+          role="status"
+        >
+          {toast}
+        </div>
+      )}
+
+      <p className="sr-only" aria-live="polite">
+        {liveMsg}
+      </p>
+
       <div className="mx-auto max-w-lg">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
@@ -55,16 +129,33 @@ export default function AdminOrdersPanel({
               Commandes reçues
             </h1>
             <p className="mt-1 text-sm text-stone-500">
-              Les commandes validées par les clients apparaissent ici.
+              Les commandes validées par les clients apparaissent ici. Mise à
+              jour automatique toutes les ~8 s — flash et son si nouvelle
+              commande.
             </p>
+            <button
+              type="button"
+              onClick={() => playNewOrderChime()}
+              className="mt-2 text-xs font-medium text-amber-800 underline decoration-amber-400/80 underline-offset-2 hover:text-amber-950"
+            >
+              Tester le signal sonore
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="shrink-0 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
-          >
-            Déconnexion
-          </button>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Link
+              href="/admin/menu"
+              className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
+            >
+              Carte & photos
+            </Link>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
+            >
+              Déconnexion
+            </button>
+          </div>
         </div>
 
         {orders.length === 0 ? (

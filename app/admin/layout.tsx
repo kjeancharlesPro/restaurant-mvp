@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { RESTAURANT_NAME } from "@/lib/menu";
 
 export const metadata: Metadata = {
-  title: "Administration — La Tavola",
+  title: `Administration — ${RESTAURANT_NAME}`,
 };
 
 export default function AdminLayout({

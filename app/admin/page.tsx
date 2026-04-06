@@ -3,7 +3,7 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionCookie,
 } from "@/lib/admin-auth";
-import { getOrders } from "@/lib/orders-store";
+import { getOrders } from "@/lib/orders";
 import AdminLoginForm from "./admin-login-form";
 import AdminOrdersPanel from "./admin-orders-panel";
 
@@ -17,6 +17,6 @@ export default async function AdminPage() {
     return <AdminLoginForm />;
   }
 
-  const orders = getOrders();
+  const orders = await getOrders();
   return <AdminOrdersPanel initialOrders={orders} />;
 }
